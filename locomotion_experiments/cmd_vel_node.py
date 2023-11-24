@@ -16,17 +16,20 @@ class CmdVelNode(Node):
         #### parameters
         self.declare_parameter('publication_rate', 200) # Hz rate at which to publish cmd_vel
         self.declare_parameter('duration', 5.0)         # s net duration of the experiment
-        self.declare_parameter('start_delay', 1.0)      # s delay before starting tp send ref
+        self.declare_parameter('start_delay', 4.0)      # s delay before starting tp send ref
+        self.declare_parameter('shutdown_delay', 2.0)   # s delay before shutting down the node
+
 
         self.publication_rate = self.get_parameter('publication_rate').get_parameter_value().integer_value
         self.duration = self.get_parameter('duration').get_parameter_value().double_value
         self.start_delay = self.get_parameter('start_delay').get_parameter_value().double_value
+        self.shutdown_delay = self.get_parameter('shutdown_delay').get_parameter_value().double_value
         
         self.publisher_ = self.create_publisher(Twist, '/cmd_vel', 10)
         self.startup_time = time.time()
         self.current_time = time.time()
         self.timer = self.create_timer(1.0 / self.publication_rate, self.timer_callback)
-        self.get_logger().info('CmdVelNode started')
+        self.get_logger().info('CmdVelNode started at {} s'.format(self.startup_time))
 
     def timer_callback(self):
         msg = Twist()
@@ -35,13 +38,13 @@ class CmdVelNode(Node):
         msg.linear.x = vx
         msg.angular.z = w  
         self.publisher_.publish(msg)
-        self.get_logger().info('Publishing: "%s"' % msg.linear.x)
+        # self.get_logger().info('Publishing: "%s"' % msg.linear.x)
 
 
     def vel_function(self, t):
         """ Function that returns the desired velocity vector as a function of time.
         """
-        vx = 0.3
+        vx = 0.80
         w = 0.0
         # return non zero only if t is in the interval [start_delay, start_delay + duration]
         if t > self.start_delay and t < (self.start_delay + self.duration):
@@ -51,13 +54,21 @@ class CmdVelNode(Node):
             # example: sinusoidal
             # vx = 0.3 * math.sin(2*math.pi*te/self.duration)
             return [vx, w]
-        else:
+        elif t > (self.start_delay + self.duration + self.shutdown_delay):
+            self.get_logger().info('CmdVelNode shutting down at {} s'.format(time.time()))
+            self.destroy_timer(self.timer)
+            self.destroy_node() # Is this safe? ¯\(°_o)/¯
             return [0.0, 0.0]
+        else:
+            return [0.0, 0.0] 
 
+
+def main(args=None):
+    rclpy.init(args=args)
+    cmd_vel_node = CmdVelNode()
+    rclpy.spin(cmd_vel_node)
+    cmd_vel_node.destroy_node()
+    rclpy.shutdown()
 
 if __name__ == '__main__':
-    rclpy.init()
-    node = CmdVelNode()
-    rclpy.spin(node)
-    node.destroy_node()
-    rclpy.shutdown()
+    main

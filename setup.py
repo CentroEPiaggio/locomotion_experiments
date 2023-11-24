@@ -24,7 +24,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'cmd_vel_node = locomotion_experiments.cmd_vel_node:main'
+            'cmd_vel_node = locomotion_experiments.cmd_vel_node:main',
+            'getup = locomotion_experiments.getup:main',
         ],
     },
 )
