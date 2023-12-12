@@ -21,7 +21,7 @@ def generate_launch_description():
                 executable = 'cmd_vel_node',
                 parameters = [{'publication_rate': 200},
                         {'duration': 5.0},
-                        {'start_delay': 1.0}]
+                        {'start_delay': 10.0}]
         )
 
         # launch argument: movie name

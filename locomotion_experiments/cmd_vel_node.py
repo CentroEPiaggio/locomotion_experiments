@@ -16,7 +16,7 @@ class CmdVelNode(Node):
         #### parameters
         self.declare_parameter('publication_rate', 200) # Hz rate at which to publish cmd_vel
         self.declare_parameter('duration', 5.0)         # s net duration of the experiment
-        self.declare_parameter('start_delay', 4.0)      # s delay before starting tp send ref
+        self.declare_parameter('start_delay', 20.0)      # s delay before starting tp send ref
         self.declare_parameter('shutdown_delay', 2.0)   # s delay before shutting down the node
 
 
@@ -24,7 +24,13 @@ class CmdVelNode(Node):
         self.duration = self.get_parameter('duration').get_parameter_value().double_value
         self.start_delay = self.get_parameter('start_delay').get_parameter_value().double_value
         self.shutdown_delay = self.get_parameter('shutdown_delay').get_parameter_value().double_value
-        
+        # log parameters:
+        self.get_logger().info('publication_rate: {}'.format(self.publication_rate))
+        self.get_logger().info('duration: {}'.format(self.duration))
+        self.get_logger().info('start_delay: {}'.format(self.start_delay))
+        self.get_logger().info('shutdown_delay: {}'.format(self.shutdown_delay))
+        ####
+
         self.publisher_ = self.create_publisher(Twist, '/cmd_vel', 10)
         self.startup_time = time.time()
         self.current_time = time.time()
@@ -44,7 +50,7 @@ class CmdVelNode(Node):
     def vel_function(self, t):
         """ Function that returns the desired velocity vector as a function of time.
         """
-        vx = 0.80
+        vx = 0.0
         w = 0.0
         # return non zero only if t is in the interval [start_delay, start_delay + duration]
         if t > self.start_delay and t < (self.start_delay + self.duration):
