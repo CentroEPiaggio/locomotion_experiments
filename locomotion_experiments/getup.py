@@ -25,10 +25,10 @@ class GetUp(Node):
              -2.094,    # flip
              -2.094,
              2.094,
-             -0.7854,   # flip
-             0.7854,    # flip
-             0.7854,
-             -0.7854,
+             -1.0472,   # flip
+             1.0472,    # flip
+             1.0472,
+             -1.0472,
         ]) 
 
         # Initialize joint publisher/subscriber
@@ -57,6 +57,9 @@ class GetUp(Node):
     def getup_callback(self):
         # interpolate from zero to default pos
         self.joint_pos = self.default_dof * (self.i / (self.deltaT * self.rate))
+        rclpy.logging.get_logger('rclpy.node').info(f'joint pos: {self.joint_pos}') 
+        rclpy.logging.get_logger('rclpy.node').info(f'i: {self.i}') 
+
         self.i += 1
         if self.i > self.deltaT * self.rate:
             self.i = self.deltaT * self.rate
