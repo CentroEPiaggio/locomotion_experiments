@@ -15,14 +15,16 @@ from launch.event_handlers import OnProcessExit
 
 def generate_launch_description():
 
-        cmdvel_node=Node(
-                package = 'locomotion_experiments',
-                name = 'cmd_vel_node',
-                executable = 'cmd_vel_node',
-                parameters = [{'publication_rate': 200},
-                        {'duration': 5.0},
-                        {'start_delay': 1.0}]
-        )
+
+
+        # cmdvel_node=Node(
+        #         package = 'locomotion_experiments',
+        #         name = 'cmd_vel_node',
+        #         executable = 'cmd_vel_node',
+        #         parameters = [{'publication_rate': 200},
+        #                 {'duration': 5.0},
+        #                 {'start_delay': 1.0}]
+        # )
 
         # launch argument: movie name
         # movie_name = LaunchConfiguration('v', default='test')
@@ -42,11 +44,11 @@ def generate_launch_description():
         # time_stamp = time.strftime("%Y_%m_%d_%H-%M-%S")
         #bag_filename = 'exp_' + index + '_mv_'+ movie_name+ '_' + time_stamp + '.bag'
 
-        policy = IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(
-                        [PathJoinSubstitution([FindPackageShare("rlg_quad_controller"), "launch", "mulinex_simulation.launch.py"])]
-                ),
-        )
+        # policy = IncludeLaunchDescription(
+        #         PythonLaunchDescriptionSource(
+        #                 [PathJoinSubstitution([FindPackageShare("rlg_quad_controller"), "launch", "mulinex_simulation.launch.py"])]
+        #         ),
+        # )
 
         # TODO: stops bag recording and policy node when cmd_vel_node is done
 
@@ -55,7 +57,7 @@ def generate_launch_description():
                 cmd=['ros2', 'bag', 'record', '-a'],
                 output='screen'
                 ),
-                cmdvel_node,
-                policy,
+                # cmdvel_node,
+                # policy,
                 
         ])
