@@ -55,14 +55,20 @@ class GetUp(Node):
 
 
     def getup_callback(self):
-        # interpolate from zero to default pos
-        self.joint_pos = self.default_dof * (self.i / (self.deltaT * self.rate))
+        WARMUP_ZONE = 200   
+        if self.i < WARMUP_ZONE:
+            self.joint_pos =  np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+        else:
+            # interpolate from zero to default pos
+            self.joint_pos = self.default_dof * ((self.i - WARMUP_ZONE)/ (self.deltaT * self.rate))
         rclpy.logging.get_logger('rclpy.node').info(f'joint pos: {self.joint_pos}') 
         rclpy.logging.get_logger('rclpy.node').info(f'i: {self.i}') 
 
         self.i += 1
-        if self.i > self.deltaT * self.rate:
-            self.i = self.deltaT * self.rate
+        
+        # SATURATE WARMPU_ZONE
+        if self.i > WARMUP_ZONE +  self.deltaT * self.rate:
+            self.i = WARMUP_ZONE +  self.deltaT * self.rate
 
         joint_msg = JointsCommand()
         joint_msg.header.stamp = rclpy.clock.Clock().now().to_msg()

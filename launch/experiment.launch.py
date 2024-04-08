@@ -21,7 +21,7 @@ def generate_launch_description():
                 executable = 'cmd_vel_node',
                 parameters = [{'publication_rate': 200},
                         {'duration': 5.0},
-                        {'start_delay': 10.0}]
+                        {'start_delay': 3.0}]
         )
 
         # launch argument: movie name
@@ -44,7 +44,7 @@ def generate_launch_description():
 
         policy = IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
-                        [PathJoinSubstitution([FindPackageShare("rlg_quad_controller"), "launch", "mulinex_simulation.launch.py"])]
+                        [PathJoinSubstitution([FindPackageShare("rlg_quad_controller"), "launch", "mulinex_inference.launch.py"])]
                 ),
         )
 
@@ -52,7 +52,7 @@ def generate_launch_description():
 
         return LaunchDescription([
                 ExecuteProcess(
-                cmd=['ros2', 'bag', 'record', '-a'],
+                cmd=['ros2', 'bag', 'record', '-a', '-s', 'mcap'],
                 output='screen'
                 ),
                 cmdvel_node,
