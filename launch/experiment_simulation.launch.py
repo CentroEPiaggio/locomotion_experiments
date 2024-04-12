@@ -15,14 +15,14 @@ from launch.event_handlers import OnProcessExit
 
 def generate_launch_description():
 
-        # cmdvel_node=Node(
-        #         package = 'locomotion_experiments',
-        #         name = 'cmd_vel_node',
-        #         executable = 'cmd_vel_node',
-        #         parameters = [{'publication_rate': 200},
-        #                 {'duration': 5.0},
-        #                 {'start_delay': 5.0}]
-        # )
+        cmdvel_node=Node(
+                package = 'locomotion_experiments',
+                name = 'cmd_vel_node',
+                executable = 'cmd_vel_node',
+                parameters = [{'publication_rate': 200},
+                        {'duration': 5.0},
+                        {'start_delay': 5.0}]
+        )
 
         # launch argument: movie name
         # movie_name = LaunchConfiguration('v', default='test')
@@ -44,7 +44,7 @@ def generate_launch_description():
 
         policy = IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
-                        [PathJoinSubstitution([FindPackageShare("rlg_quad_controller"), "launch", "mulinex_inference.launch.py"])]
+                        [PathJoinSubstitution([FindPackageShare("rlg_quad_controller"), "launch", "mulinex_simulation.launch.py"])]
                 ),
         )
 
@@ -52,10 +52,10 @@ def generate_launch_description():
 
         return LaunchDescription([
                 ExecuteProcess(
-                cmd=['ros2', 'bag', 'record', '-a', '-o', 'DR7_no_spike_2_vero', '-s', 'mcap'],
+                cmd=['ros2', 'bag', 'record', '-a', '-o', 'bag_to_delete', '-s', 'mcap'],
                 output='screen'
                 ),
-                # cmdvel_node,
+                cmdvel_node,
                 policy,
                 
         ])

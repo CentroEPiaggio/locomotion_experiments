@@ -50,7 +50,7 @@ class CmdVelNode(Node):
     def vel_function(self, t):
         """ Function that returns the desired velocity vector as a function of time.
         """
-        vx = 0.3
+        vx = 1.0
         w = 0.0
         # return non zero only if t is in the interval [start_delay, start_delay + duration]
         if t > self.start_delay and t < (self.start_delay + self.duration):
