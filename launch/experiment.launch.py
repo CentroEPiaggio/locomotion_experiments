@@ -3,7 +3,7 @@ import time
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription,RegisterEventHandler, LogInfo, EmitEvent
-from launch.substitutions import LaunchConfiguration, Command, FindExecutable, PathJoinSubstitution, PythonExpression
+from launch.substitutions import LaunchConfiguration, Command, FindExecutable, PathJoinSubstitution, PythonExpression, TextSubstitution
 from launch_ros.actions import Node
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.conditions import IfCondition
@@ -14,12 +14,17 @@ from launch.events import Shutdown
 
 
 def generate_launch_description():
-
+        csv = LaunchConfiguration('csv', default='locomotion_experiments_data.csv')
+        csv_declare = DeclareLaunchArgument(
+                'csv',
+                default_value='locomotion_experiments_data.csv',
+                description='csv file to save info, including extension. Default: locomotion_experiments_data.csv'
+                )
 
         exp = LaunchConfiguration('exp', default='22_04')
         exp_declare = DeclareLaunchArgument(
                 'exp',
-                default_value='22_04',
+                default_value='experiment',
                 description='experiment name'
                 )
 
@@ -42,7 +47,7 @@ def generate_launch_description():
         duration_declare = DeclareLaunchArgument(
                 'duration',
                 default_value='22_04',
-                description='velocity'
+                description='duration'
                 )
         
         
@@ -79,27 +84,38 @@ def generate_launch_description():
                 ),
         )
 
+        save_csv_process = ExecuteProcess(
+                cmd=[
+                        'echo', exp, use_joy, vel, duration, '>>', csv
+                ]
+
+        )
         bag_process = ExecuteProcess(
                 cmd=['ros2', 'bag', 'record', '-a', '-o', exp, '-s', 'mcap'],
                 output='screen'
         )
+
         # TODO: stops bag recording and policy node when cmd_vel_node is done
-        # RegisterEventHandler(
-        #         event_handler= OnProcessExit(
-        #         target_action=bag_process,
-        #         on_exit=[
-        #         LogInfo(
-        #                 msg="BAG NODE CRASHED. STOPPING EXPERIMENT."),
-        #         EmitEvent(
-        #                 event=Shutdown())]))
+        shutdown_event = RegisterEventHandler(
+                event_handler= OnProcessExit(
+                target_action=bag_process,
+                on_exit=[
+                LogInfo(
+                        msg="BAG NODE CRASHED. STOPPING EXPERIMENT."),
+                EmitEvent(
+                        event=Shutdown())]))
+        
         return LaunchDescription([
                 exp_declare, 
                 use_joy_declare,
                 duration_declare,
                 vel_declare,
+                csv_declare,
+                save_csv_process,
                 steering_joy,
                 bag_process,
                 cmdvel_node,
                 policy,
+                shutdown_event,
 
         ])
