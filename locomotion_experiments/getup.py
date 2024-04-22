@@ -51,7 +51,7 @@ class GetUp(Node):
 
         self.init_pos = {self.joint_names[i]:0.0 for i in range(self.njoint)}
         
-        self.declare_parameter('joint_state_topic', '/state_broadcaster/joint_states')
+        self.declare_parameter('joint_state_topic', '/state_broadcaster/joints_state')
         self.joint_state_topic = self.get_parameter('joint_state_topic').get_parameter_value().string_value
 
         if self.simulation:
