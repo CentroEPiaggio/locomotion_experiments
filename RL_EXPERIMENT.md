@@ -17,4 +17,5 @@ Here is a (work in progress) list of step-by-step info to perform RL experiments
 
  - Once the experiment is finished, the policy **WILL BE STILL ACTIVE** you have to turn it off with `CTRL-C` in the terminal of the launch above.
  - You can now run the `getup` node again, the robot will slowly go back in the default position.
+ - Take a look at the temperatures before going again!
  - To change the reference shape take a look in `cmd_vel_node.py`
