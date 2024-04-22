@@ -2,45 +2,76 @@ import os
 import time
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription,RegisterEventHandler
-from launch.substitutions import LaunchConfiguration, Command, FindExecutable, PathJoinSubstitution
+from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription,RegisterEventHandler, LogInfo, EmitEvent
+from launch.substitutions import LaunchConfiguration, Command, FindExecutable, PathJoinSubstitution, PythonExpression
 from launch_ros.actions import Node
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.conditions import IfCondition
 from launch_ros.substitutions import FindPackageShare
 from launch.event_handlers import OnProcessExit
-
+from launch.events import Shutdown
 ## primo video è n 19 (fermo)
 
 
 def generate_launch_description():
 
-        # cmdvel_node=Node(
-        #         package = 'locomotion_experiments',
-        #         name = 'cmd_vel_node',
-        #         executable = 'cmd_vel_node',
-        #         parameters = [{'publication_rate': 200},
-        #                 {'duration': 5.0},
-        #                 {'start_delay': 5.0}]
-        # )
 
-        # launch argument: movie name
-        # movie_name = LaunchConfiguration('v', default='test')
-        # movie_name_declare = DeclareLaunchArgument(
-        #         'v',
-        #         default_value='test',
-        #         description='Name of the movie to be recorded'
-        #         )
+        exp = LaunchConfiguration('exp', default='22_04')
+        exp_declare = DeclareLaunchArgument(
+                'exp',
+                default_value='22_04',
+                description='experiment name'
+                )
+
+        use_joy = LaunchConfiguration('use_joy', default='False')
+        use_joy_declare = DeclareLaunchArgument(
+                'use_joy',
+                default_value='False',
+                description='Use joystick and disable cmd_vel_node'
+                )
+        
+        vel = LaunchConfiguration('vel', default=-0.8)
+        vel_declare = DeclareLaunchArgument(
+                'vel',
+                default_value='22_04',
+                description='velocity'
+                )
+        
                 
-        # # launch argument: index of experiment
-        # index = LaunchConfiguration('n', default='0')
-        # index_declare = DeclareLaunchArgument(
-        #         'n',
-        #         default_value='0',
-        #         description='Number of the experiment'
-        #         )
-        # time_stamp = time.strftime("%Y_%m_%d_%H-%M-%S")
-        #bag_filename = 'exp_' + index + '_mv_'+ movie_name+ '_' + time_stamp + '.bag'
+        duration = LaunchConfiguration('duration', default=2.0)
+        duration_declare = DeclareLaunchArgument(
+                'duration',
+                default_value='22_04',
+                description='velocity'
+                )
+        
+        
+        cmdvel_node=Node(
+                package = 'locomotion_experiments',
+                name = 'cmd_vel_node',
+                executable = 'cmd_vel_node',
+                parameters =    [{'publication_rate': 200},
+                                {'duration': duration},
+                                {'start_delay': 6.0},
+                                {'top_v': vel}],
+                condition=IfCondition(
+                        PythonExpression([
+                               'not ',
+                                use_joy
+                        ])
+                )
+        )
+
+        steering_joy = Node(
+                package = 'rqt_robot_steering',
+                name = 'rqt_robot_steering',
+                executable = 'rqt_robot_steering',
+                condition=IfCondition(
+                        PythonExpression([
+                                use_joy
+                        ])
+                )
+        )
 
         policy = IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
@@ -48,14 +79,27 @@ def generate_launch_description():
                 ),
         )
 
-        # TODO: stops bag recording and policy node when cmd_vel_node is done
-
-        return LaunchDescription([
-                ExecuteProcess(
-                cmd=['ros2', 'bag', 'record', '-a', '-o', 'DR7_no_spike_2_vero', '-s', 'mcap'],
+        bag_process = ExecuteProcess(
+                cmd=['ros2', 'bag', 'record', '-a', '-o', exp, '-s', 'mcap'],
                 output='screen'
-                ),
-                # cmdvel_node,
+        )
+        # TODO: stops bag recording and policy node when cmd_vel_node is done
+        # RegisterEventHandler(
+        #         event_handler= OnProcessExit(
+        #         target_action=bag_process,
+        #         on_exit=[
+        #         LogInfo(
+        #                 msg="BAG NODE CRASHED. STOPPING EXPERIMENT."),
+        #         EmitEvent(
+        #                 event=Shutdown())]))
+        return LaunchDescription([
+                exp_declare, 
+                use_joy_declare,
+                duration_declare,
+                vel_declare,
+                steering_joy,
+                bag_process,
+                cmdvel_node,
                 policy,
-                
+
         ])
