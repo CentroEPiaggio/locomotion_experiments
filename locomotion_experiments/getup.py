@@ -46,31 +46,44 @@ class GetUp(Node):
             'RH_KFE',
         )
 
-        self.joint_target_pos_pub = self.create_publisher(JointsCommand, self.joint_target_pos_topic, 10)
+     
         self. i = 0
-        self.joint_pos = np.zeros((self.njoint, 1))
-        self.joint_vel = {self.joint_names[i]:0.0 for i in range(self.njoint)}
-   
-        #self.timer = self.create_timer(1.0 / self.rate, self.getup_callback)
+
+        self.init_pos = {self.joint_names[i]:0.0 for i in range(self.njoint)}
         
         self.declare_parameter('joint_state_topic', '/state_broadcaster/joint_states')
         self.joint_state_topic = self.get_parameter('joint_state_topic').get_parameter_value().string_value
 
         if self.simulation:
+            self.joint_state_topic = '/joint_states'
+            self.joint_target_pos_topic = '/PD_control/command'
             self.joint_target_pos_pub = self.create_publisher(JointState, self.joint_target_pos_topic, 10)
             self.joint_sub  = self.create_subscription(JointState, self.joint_state_topic, self.joint_state_callback, 10)
         else:
             self.joint_target_pos_pub = self.create_publisher(JointsCommand, self.joint_target_pos_topic, 10)
             self.joint_sub  = self.create_subscription(JointsStates, self.joint_state_topic, self.joint_state_callback, 10)
-
+        
         self.default_acquired = False
 
         rclpy.logging.get_logger('rclpy.node').info('GetUp started, waiting for joint state') 
 
 
     def getup_callback(self):
-        # interpolate from zero to default pos
-        self.joint_pos = self.default_dof * (self.i / (self.deltaT * self.rate))
+        # interpolate from init to default pos
+        # interpolation from a to b: 
+        t = self.i / (self.deltaT * self.rate) # 0 to 1
+        start_pos = np.array(list(self.init_pos.values()))
+
+        # linear interpolation:
+        self.joint_pos = start_pos*(1-t) + self.default_dof*t
+
+        # sigmoid-like interpolation:
+        # t_sig = 1/(1+np.exp(-t))
+        # self.joint_pos = start_pos*(1-t_sig) + self.default_dof*t_sig
+
+        # being angles in radians, we need to wrap them to [-pi, pi]
+        # self.joint_pos = np.mod(self.joint_pos + np.pi, 2*np.pi) - np.pi
+        
         rclpy.logging.get_logger('rclpy.node').info(f'joint pos: {self.joint_pos}') 
         rclpy.logging.get_logger('rclpy.node').info(f'i: {self.i}') 
 
@@ -79,13 +92,17 @@ class GetUp(Node):
             self.i = self.deltaT * self.rate
 
         joint_msg = JointsCommand()
+        if self.simulation:
+            joint_msg = JointState()
+
         joint_msg.header.stamp = rclpy.clock.Clock().now().to_msg()
         joint_msg.name = self.joint_names
         joint_msg.position = (self.joint_pos).tolist()
         joint_msg.velocity = np.zeros(self.njoint).tolist()
         joint_msg.effort = np.zeros(self.njoint).tolist()
-        joint_msg.kp_scale = np.ones(self.njoint).tolist()
-        joint_msg.kd_scale = np.ones(self.njoint).tolist()
+        if not self.simulation:
+            joint_msg.kp_scale = np.ones(self.njoint).tolist()
+            joint_msg.kd_scale = np.ones(self.njoint).tolist()
 
         self.joint_target_pos_pub.publish(joint_msg)
 
@@ -93,12 +110,15 @@ class GetUp(Node):
     def joint_state_callback(self, msg):
         if self.default_acquired:
             return
-        self.default_dof = msg.position[:]
+        rclpy.logging.get_logger('rclpy.node').info('{}'.format((msg.position[:].tolist())))
+        for i in range(self.njoint):
+            self.init_pos[msg.name[i]] = msg.position[i]
+
         self.default_acquired = True
         rclpy.logging.get_logger('rclpy.node').info('Joints acquired, starting getup') 
 
         self.timer = self.create_timer(1.0 / self.rate, self.getup_callback)
-        
+
 
 
 def main(args=None):
