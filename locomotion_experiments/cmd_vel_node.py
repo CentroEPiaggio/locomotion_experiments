@@ -54,17 +54,26 @@ class CmdVelNode(Node):
     def vel_function(self, t):
         """ Function that returns the desired velocity vector as a function of time.
         """
-        vx = -0.8
+
         vx = self.top_v
         w = 0.0
         # return non zero only if t is in the interval [start_delay, start_delay + duration]
         if t > self.start_delay and t < (self.start_delay + self.duration):
             te = t - self.start_delay
+            
             # trapezoidal signal. 10% rise time
-            vxt = min(vx * te/(self.duration/10.0), vx, vx - vx*(te - 0.9*self.duration)*10.0/(self.duration))
-            vxt = vx * te/self.duration
+            # vxt = min(vx * te/(self.duration/10.0), vx, vx - vx*(te - 0.9*self.duration)*10.0/(self.duration))
+            
+            # ramp:
+            # vxt = vx * te/self.duration
+            
             # example: sinusoidal
             # vx = 0.3 * math.sin(2*math.pi*te/self.duration)
+            
+            # Invert:
+            if t > (self.start_delay + self.duration/2.0):
+                vx = -self.top_v
+
             return [vx, w]
         elif t > (self.start_delay + self.duration + self.shutdown_delay):
             self.get_logger().info('CmdVelNode shutting down at {} s'.format(time.time()))
