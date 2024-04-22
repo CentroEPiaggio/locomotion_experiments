@@ -18,12 +18,16 @@ class CmdVelNode(Node):
         self.declare_parameter('duration', 3.0)         # s net duration of the experiment
         self.declare_parameter('start_delay', 5.0)      # s delay before starting tp send ref
         self.declare_parameter('shutdown_delay', 2.0)   # s delay before shutting down the node
+        self.declare_parameter('top_v', 0.5)            # vel      
 
 
         self.publication_rate = self.get_parameter('publication_rate').get_parameter_value().integer_value
         self.duration = self.get_parameter('duration').get_parameter_value().double_value
         self.start_delay = self.get_parameter('start_delay').get_parameter_value().double_value
         self.shutdown_delay = self.get_parameter('shutdown_delay').get_parameter_value().double_value
+        self.top_v = self.get_parameter('top_v').get_parameter_value().double_value
+
+
         # log parameters:
         self.get_logger().info('publication_rate: {}'.format(self.publication_rate))
         self.get_logger().info('duration: {}'.format(self.duration))
@@ -50,7 +54,8 @@ class CmdVelNode(Node):
     def vel_function(self, t):
         """ Function that returns the desired velocity vector as a function of time.
         """
-        vx = 0.8
+        vx = -0.8
+        vx = self.top_v
         w = 0.0
         # return non zero only if t is in the interval [start_delay, start_delay + duration]
         if t > self.start_delay and t < (self.start_delay + self.duration):
