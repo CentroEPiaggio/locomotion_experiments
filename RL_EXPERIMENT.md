@@ -22,5 +22,5 @@ Here is a (work in progress) list of step-by-step info to perform RL experiments
 
 
 ### To use Joypad control
-
+Just add  `use_joy:='True'` to the launch command and `rqt_robot_steering` will be launched, instead of `cmd_vel_node`
        ros2 launch locomotion_experiments experiment.launch.py exp:='experiment_number_1' use_joy:='True' csv:='Data.csv'
