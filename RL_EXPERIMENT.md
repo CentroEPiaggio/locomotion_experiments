@@ -19,3 +19,8 @@ Here is a (work in progress) list of step-by-step info to perform RL experiments
  - You can now run the `getup` node again, the robot will slowly go back in the default position.
  - Take a look at the temperatures before going again!
  - To change the reference shape take a look in `cmd_vel_node.py`
+
+
+### To use Joypad control
+
+       ros2 launch locomotion_experiments experiment.launch.py exp:='experiment_number_1' use_joy:='True' csv:='Data.csv'
