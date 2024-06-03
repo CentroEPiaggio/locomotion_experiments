@@ -4,6 +4,7 @@ The node uses the vel_function(time), written by the user, to generate the cmd_v
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
+import numpy as np
 import time
 import math
 
@@ -22,6 +23,7 @@ class CmdVelNode(Node):
 
 
         self.publication_rate = self.get_parameter('publication_rate').get_parameter_value().integer_value
+        self.period_duration = self.get_parameter('period_duration').get_parameter_value().double_value
         self.duration = self.get_parameter('duration').get_parameter_value().double_value
         self.start_delay = self.get_parameter('start_delay').get_parameter_value().double_value
         self.shutdown_delay = self.get_parameter('shutdown_delay').get_parameter_value().double_value
@@ -31,6 +33,7 @@ class CmdVelNode(Node):
         # log parameters:
         self.get_logger().info('publication_rate: {}'.format(self.publication_rate))
         self.get_logger().info('duration: {}'.format(self.duration))
+        self.get_logger().info('period_duration: {}'.format(self.period_duration))
         self.get_logger().info('start_delay: {}'.format(self.start_delay))
         self.get_logger().info('shutdown_delay: {}'.format(self.shutdown_delay))
         ####
@@ -70,9 +73,12 @@ class CmdVelNode(Node):
             # example: sinusoidal
             # vx = 0.3 * math.sin(2*math.pi*te/self.duration)
             
-            # Invert:
-            if t > (self.start_delay + self.duration/2.0):
-                vx = -self.top_v
+            # # Invert:
+            # if t > (self.start_delay + self.duration/2.0):
+            #     vx = -self.top_v
+
+            # square wave
+            vx = self.top_v * np.sign(np.sin(2*np.pi*te/self.period_duration))
 
             return [vx, w]
         elif t > (self.start_delay + self.duration + self.shutdown_delay):

@@ -43,11 +43,17 @@ def generate_launch_description():
                 )
         
                 
-        duration = LaunchConfiguration('duration', default=2.0)
-        duration_declare = DeclareLaunchArgument(
-                'duration',
+        period_duration = LaunchConfiguration('period_duration', default=2.0)
+        period_duration_declare = DeclareLaunchArgument(
+                'period_duration',
                 default_value='22_04',
-                description='duration'
+                description='period duration in seconds, half period robot goes forward and half period backward.'
+                )
+        exp_duration = LaunchConfiguration('exp_duration', default=2.0)
+        exp_duration_declare = DeclareLaunchArgument(
+                'exp_duration',
+                default_value='22_04',
+                description='Full experiment duration in seconds.'
                 )
         
         
@@ -56,7 +62,8 @@ def generate_launch_description():
                 name = 'cmd_vel_node',
                 executable = 'cmd_vel_node',
                 parameters =    [{'publication_rate': 200},
-                                {'duration': duration},
+                                {'period_duration': period_duration},
+                                {'duration': exp_duration},
                                 {'start_delay': 6.0},
                                 {'top_v': vel}],
                 condition=IfCondition(
@@ -86,12 +93,12 @@ def generate_launch_description():
 
         save_csv_process = ExecuteProcess(
                 cmd=[
-                        'echo', exp, use_joy, vel, duration, '>>', csv
+                        'echo', exp, use_joy, vel, period_duration, '>>', csv
                 ]
 
         )
         bag_process = ExecuteProcess(
-                cmd=['ros2', 'bag', 'record', '-a', '-o', exp, '-s', 'mcap'],
+                cmd=['ros2', 'bag', 'record', '-a', '-o', exp, '-s', 'mcap', '-d', '300'],
                 output='screen'
         )
 
@@ -108,7 +115,7 @@ def generate_launch_description():
         return LaunchDescription([
                 exp_declare, 
                 use_joy_declare,
-                duration_declare,
+                period_duration_declare,
                 vel_declare,
                 csv_declare,
                 save_csv_process,
